@@ -23,7 +23,22 @@ const routeContext = computed(() => {
     <header class="app-header">
       <div class="app-header-content">
         <router-link to="/" class="app-logo" aria-label="U-Loc Home">
-          <span class="app-logo-icon">📍</span>
+          <span class="app-logo-icon" aria-hidden="true">
+            <svg
+              viewBox="0 0 24 24"
+              width="20"
+              height="20"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <rect x="5" y="2" width="14" height="20" rx="3" ry="3" />
+              <line x1="12" y1="18" x2="12.01" y2="18" stroke-width="2.5" />
+              <line x1="10" y1="5" x2="14" y2="5" />
+            </svg>
+          </span>
           <span class="app-logo-text">U-Loc</span>
         </router-link>
         <span v-if="routeContext" class="app-route-context">{{ routeContext }}</span>
@@ -79,7 +94,14 @@ const routeContext = computed(() => {
 }
 
 .app-logo-icon {
-  font-size: 1.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+
+.app-logo-icon svg {
+  display: block;
 }
 
 .app-logo-text {
