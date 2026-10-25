@@ -60,6 +60,8 @@ export function createApp(configOverrides: Partial<Config> = {}): AppContext {
             'https://*.tile.openstreetmap.org',
             'https://*.openstreetmap.org',
             'https://*.basemaps.cartocdn.com',
+            'https://*.cartocdn.com',
+            'https://basemaps.cartocdn.com',
           ],
           connectSrc: ["'self'", 'ws:', 'wss:', 'http:', 'https:'],
         },

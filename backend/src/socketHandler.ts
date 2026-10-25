@@ -127,9 +127,9 @@ export function setupSocketHandlers(
           return;
         }
 
-        // Broadcast to admin subscribers in the room
+        // Broadcast to admin subscribers and all authenticated admins
         const room = `session:${socket.data.sessionId}`;
-        io.to(room).emit('location:update', {
+        io.to(room).to('admins').emit('location:update', {
           sessionId: socket.data.sessionId,
           lat: location.lat,
           lng: location.lng,

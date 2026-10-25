@@ -34,8 +34,11 @@ function getAccuracyColor(): string {
   return props.isStale ? 'rgba(148, 163, 184, 0.2)' : 'rgba(37, 99, 235, 0.15)';
 }
 
+let resizeObserver: ResizeObserver | null = null;
+
 function updatePosition(): void {
   if (!map) return;
+  map.invalidateSize();
 
   if (props.lat == null || props.lng == null) {
     // No position — remove markers, show world view
@@ -101,30 +104,55 @@ onMounted(async () => {
     attributionControl: true,
   });
 
-  const primaryLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors',
-    maxZoom: 19,
-  });
+  // Primary: High-speed CARTO Voyager OSM tiles (globally CDN cached, non-blocking)
+  const cartoLayer = L.tileLayer(
+    'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png',
+    {
+      attribution:
+        '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions" target="_blank" rel="noopener">CARTO</a>',
+      subdomains: 'abcd',
+      maxZoom: 19,
+    }
+  );
 
-  primaryLayer.addTo(map);
+  cartoLayer.addTo(map);
 
-  // Seamless fallback to CARTO Voyager OSM tiles if volunteer OSM tile servers are blocked or throttled
+  // Backup fallback: OpenStreetMap volunteer tiles
   let fallbackTriggered = false;
-  primaryLayer.on('tileerror', () => {
+  cartoLayer.on('tileerror', () => {
     if (!fallbackTriggered && map) {
       fallbackTriggered = true;
       try {
-        map.removeLayer(primaryLayer);
-        L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
-          attribution: '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions" target="_blank" rel="noopener">CARTO</a>',
-          subdomains: 'abcd',
+        map.removeLayer(cartoLayer);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+          attribution: '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors',
           maxZoom: 19,
         }).addTo(map);
       } catch {
-        // Ignore if map unmounted
+        // Ignore if unmounted
       }
     }
   });
+
+  // Ensure map measures container dimensions properly after render / expansion
+  map.invalidateSize();
+  setTimeout(() => {
+    map?.invalidateSize();
+    if (props.lat != null && props.lng != null) {
+      updatePosition();
+    }
+  }, 100);
+  setTimeout(() => {
+    map?.invalidateSize();
+  }, 350);
+
+  // Responsive container resize observer (e.g., accordion expand / window resize)
+  if (typeof ResizeObserver !== 'undefined' && mapContainer.value) {
+    resizeObserver = new ResizeObserver(() => {
+      map?.invalidateSize();
+    });
+    resizeObserver.observe(mapContainer.value);
+  }
 
   if (props.lat != null && props.lng != null) {
     updatePosition();
@@ -139,6 +167,10 @@ watch(
 );
 
 onBeforeUnmount(() => {
+  if (resizeObserver) {
+    resizeObserver.disconnect();
+    resizeObserver = null;
+  }
   if (map) {
     map.remove();
     map = null;

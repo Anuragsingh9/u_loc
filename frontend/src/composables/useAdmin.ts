@@ -172,6 +172,8 @@ export function useAdmin() {
           isStale: data.isStale,
         },
       };
+      // Trigger full reactivity
+      sessions.value = [...sessions.value];
     }
   }
 
