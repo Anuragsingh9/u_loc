@@ -62,9 +62,8 @@ test.describe('Real-Time Location Sharing Application', () => {
     await adminPage.click('button:has-text("Create Session")');
 
     // Verify session card created
-    const sessionCard = adminPage.locator('.session-card').first();
+    const sessionCard = adminPage.locator('.session-card', { hasText: 'E2E Fleet Vehicle' });
     await expect(sessionCard).toBeVisible();
-    await expect(sessionCard).toContainText('E2E Fleet Vehicle');
 
     // Get pairing code
     const pairingCodeElement = sessionCard.locator('.pairing-code .font-mono');
@@ -110,7 +109,7 @@ test.describe('Real-Time Location Sharing Application', () => {
     // Admin explicitly deletes / cancels the session
     adminPage.once('dialog', (dialog) => dialog.accept());
     await sessionCard.locator('button:has-text("End Session")').click();
-    await expect(adminPage.locator('.session-card')).toHaveCount(0);
+    await expect(sessionCard).not.toBeVisible();
 
     await adminContext.close();
     await sharerContext.close();

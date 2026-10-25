@@ -92,14 +92,25 @@ function updatePosition(): void {
     }).addTo(map);
   }
 
-  map.setView(latlng, Math.max(map.getZoom(), POSITION_ZOOM));
+  const rawZoom = typeof map.getZoom === 'function' ? map.getZoom() : undefined;
+  const currentZoom = typeof rawZoom === 'number' && !isNaN(rawZoom) ? rawZoom : POSITION_ZOOM;
+  const targetZoom = Math.max(currentZoom, POSITION_ZOOM);
+  map.setView(latlng, targetZoom);
 }
 
 onMounted(async () => {
   await nextTick();
   if (!mapContainer.value) return;
 
+  const hasInitialPos = props.lat != null && props.lng != null;
+  const initialCenter: L.LatLngExpression = hasInitialPos
+    ? [props.lat!, props.lng!]
+    : DEFAULT_CENTER;
+  const initialZoom = hasInitialPos ? POSITION_ZOOM : DEFAULT_ZOOM;
+
   map = L.map(mapContainer.value, {
+    center: initialCenter,
+    zoom: initialZoom,
     zoomControl: props.interactive,
     dragging: props.interactive,
     scrollWheelZoom: props.interactive,
@@ -143,8 +154,11 @@ onMounted(async () => {
     }
   });
 
+  if (hasInitialPos) {
+    updatePosition();
+  }
+
   // Ensure map measures container dimensions properly after render / expansion
-  map.invalidateSize();
   setTimeout(() => {
     map?.invalidateSize();
     if (props.lat != null && props.lng != null) {
@@ -161,12 +175,6 @@ onMounted(async () => {
       map?.invalidateSize();
     });
     resizeObserver.observe(mapContainer.value);
-  }
-
-  if (props.lat != null && props.lng != null) {
-    updatePosition();
-  } else {
-    map.setView(DEFAULT_CENTER, DEFAULT_ZOOM);
   }
 });
 
