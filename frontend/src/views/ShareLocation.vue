@@ -2,6 +2,7 @@
 import { ref, computed, onMounted, onBeforeUnmount } from 'vue';
 import { useSharing } from '@/composables/useSharing';
 import ConsentDialog from '@/components/ConsentDialog.vue';
+import DeviceDiagnosticsDashboard from '@/components/DeviceDiagnosticsDashboard.vue';
 import LocationMap from '@/components/LocationMap.vue';
 import StatusIndicator from '@/components/StatusIndicator.vue';
 
@@ -169,49 +170,17 @@ function onShareAgain(): void {
       </div>
     </section>
 
-    <!-- SHARING STATE -->
+    <!-- SHARING STATE: PHONE SYSTEM DIAGNOSTICS DASHBOARD -->
     <section v-else-if="status === 'sharing'" class="share-state share-state--sharing">
-      <div class="sharing-header">
-        <div class="sharing-status-row">
-          <StatusIndicator
-            :status="connectionStatus === 'connected' ? 'connected' : 'waiting'"
-            :label="connectionStatus === 'connected' ? 'Connected' : 'Reconnecting…'"
-          />
-          <StatusIndicator v-if="isWatching" status="active" label="GPS Active" />
-        </div>
-        <div class="sharing-meta">
-          <span v-if="accuracyText" class="sharing-meta-item">
-            📡 {{ accuracyText }}
-          </span>
-          <span v-if="lastUpdateText" class="sharing-meta-item">
-            🕐 {{ lastUpdateText }}
-          </span>
-          <span class="sharing-meta-item">
-            🟢 Active
-          </span>
-        </div>
-      </div>
-
-      <div class="sharing-map">
-        <LocationMap
-          :lat="currentPosition?.lat"
-          :lng="currentPosition?.lng"
-          :accuracy="currentPosition?.accuracy"
-          :interactive="true"
-        />
-      </div>
-
-      <div v-if="geoError" class="sharing-warning">
-        ⚠️ {{ geoError.message }}
-      </div>
-
-      <button
-        class="btn btn-danger btn-lg btn-block stop-btn"
-        @click="onStop"
-        aria-label="Stop sharing your location"
-      >
-        🛑 Stop Sharing
-      </button>
+      <DeviceDiagnosticsDashboard
+        :connection-status="connectionStatus"
+        :is-watching="isWatching"
+        :current-position="currentPosition"
+        :geo-error="geoError"
+        :accuracy-text="accuracyText"
+        :last-update-text="lastUpdateText"
+        @stop="onStop"
+      />
     </section>
 
     <!-- STOPPED STATE -->
