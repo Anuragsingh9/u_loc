@@ -173,7 +173,10 @@ function onShareAgain(): void {
     <section v-else-if="status === 'sharing'" class="share-state share-state--sharing">
       <div class="sharing-header">
         <div class="sharing-status-row">
-          <StatusIndicator status="connected" label="Connected" />
+          <StatusIndicator
+            :status="connectionStatus === 'connected' ? 'connected' : 'waiting'"
+            :label="connectionStatus === 'connected' ? 'Connected' : 'Reconnecting…'"
+          />
           <StatusIndicator v-if="isWatching" status="active" label="GPS Active" />
         </div>
         <div class="sharing-meta">

@@ -24,6 +24,12 @@ export function useSharing() {
     status.value = 'entering-code';
   }
 
+  function attemptJoin(): void {
+    if (_pairingCode && (status.value === 'sharing' || status.value === 'connecting')) {
+      emit('sharer:join', { pairingCode: _pairingCode, consent: true });
+    }
+  }
+
   /**
    * Begin sharing: connect socket, join session, start geolocation.
    */
@@ -39,15 +45,8 @@ export function useSharing() {
 
     connect();
 
-    // Wait for connection, then emit join
-    const onConnect = () => {
-      emit('sharer:join', { pairingCode, consent: true });
-    };
-
     if (isConnected.value) {
-      onConnect();
-    } else {
-      socket.once('connect', onConnect);
+      attemptJoin();
     }
   }
 
@@ -78,6 +77,16 @@ export function useSharing() {
     expiresAt.value = data.expiresAt;
     status.value = 'sharing';
     startWatching();
+
+    // Immediately emit current position upon connecting or reconnecting
+    if (currentPosition.value) {
+      emit('sharer:location', {
+        lat: currentPosition.value.lat,
+        lng: currentPosition.value.lng,
+        accuracy: currentPosition.value.accuracy,
+        timestamp: currentPosition.value.timestamp,
+      });
+    }
   }
 
   function onSessionExpired() {
@@ -99,12 +108,29 @@ export function useSharing() {
   on('session:expired', onSessionExpired);
   on('session:error', onSessionError);
 
-  // Attempt to rejoin on reconnect
-  socket.io.on('reconnect', () => {
-    if (_pairingCode && (status.value === 'sharing' || status.value === 'connecting')) {
-      emit('sharer:join', { pairingCode: _pairingCode, consent: true });
-    }
+  // Attempt to rejoin whenever socket connects or reconnects
+  socket.on('connect', () => {
+    attemptJoin();
   });
+
+  socket.io.on('reconnect', () => {
+    attemptJoin();
+  });
+
+  // Native browser network reconnection (e.g. Wi-Fi / mobile data reconnected)
+  function handleOnline(): void {
+    if (_pairingCode && (status.value === 'sharing' || status.value === 'connecting')) {
+      if (!socket.connected) {
+        connect();
+      } else {
+        attemptJoin();
+      }
+    }
+  }
+
+  if (typeof window !== 'undefined') {
+    window.addEventListener('online', handleOnline);
+  }
 
   // Watch geolocation position and emit location updates
   watch(currentPosition, (pos) => {
@@ -127,6 +153,9 @@ export function useSharing() {
 
   // Cleanup
   onScopeDispose(() => {
+    if (typeof window !== 'undefined') {
+      window.removeEventListener('online', handleOnline);
+    }
     stopWatching();
     off('session:joined', onSessionJoined);
     off('session:expired', onSessionExpired);

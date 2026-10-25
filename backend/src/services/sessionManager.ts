@@ -135,11 +135,6 @@ export class SessionManager {
       return null;
     }
 
-    // If someone is already connected, reject
-    if (session.isSharerConnected && session.sharerSocketId) {
-      return null;
-    }
-
     // Cancel any cleanup timer — session does not expire once started
     const timer = this.cleanupTimers.get(sessionId);
     if (timer) {
@@ -148,12 +143,15 @@ export class SessionManager {
     }
     session.expiresAt = null;
 
+    // Clean up old socket rate limiting if socket ID changed on reconnect
+    if (session.sharerSocketId && session.sharerSocketId !== socketId) {
+      this.lastLocationTime.delete(session.sharerSocketId);
+    }
+
     session.isSharerConnected = true;
     session.sharerSocketId = socketId;
 
-    // Remove pairing code so it cannot be reused
-    this.pairingCodes.delete(normalized);
-
+    // Retain pairing code until session is ended by admin to allow reconnects
     return session;
   }
 

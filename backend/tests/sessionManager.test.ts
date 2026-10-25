@@ -95,27 +95,29 @@ describe('SessionManager', () => {
       expect(joined!.sharerSocketId).toBe('socket-123');
     });
 
-    it('should invalidate pairing code after use (can\'t reuse)', () => {
+    it('should allow sharer to reconnect with pairing code and update socket ID', () => {
       const session = manager.createSession();
       const code = session.pairingCode;
 
       // First join should succeed
       const joined = manager.joinSession(code, 'socket-1');
       expect(joined).not.toBeNull();
+      expect(joined!.sharerSocketId).toBe('socket-1');
+      expect(joined!.isSharerConnected).toBe(true);
 
-      // Second join with same code should fail
-      const secondJoin = manager.joinSession(code, 'socket-2');
-      expect(secondJoin).toBeNull();
+      // Reconnecting with same code (network toggle / Wi-Fi) updates socket and remains connected
+      const reconnected = manager.joinSession(code, 'socket-2');
+      expect(reconnected).not.toBeNull();
+      expect(reconnected!.sharerSocketId).toBe('socket-2');
+      expect(reconnected!.isSharerConnected).toBe(true);
     });
 
-    it('should reject join if another sharer is already connected', () => {
+    it('should invalidate pairing code once session is ended by admin', () => {
       const session = manager.createSession();
       const code = session.pairingCode;
 
-      manager.joinSession(code, 'socket-1');
-
-      // Even if we somehow had the code again, can't join
-      const result = manager.joinSession(code, 'socket-2');
+      manager.endSession(session.sessionId);
+      const result = manager.joinSession(code, 'socket-1');
       expect(result).toBeNull();
     });
 

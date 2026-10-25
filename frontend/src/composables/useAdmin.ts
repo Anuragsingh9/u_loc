@@ -203,15 +203,39 @@ export function useAdmin() {
   on('sharer:disconnected', onSharerDisconnected);
   on('session:expired', onSessionExpired);
 
-  // Re-auth on reconnect
-  socket.io.on('reconnect', () => {
+  // Re-auth on connect / reconnect
+  function attemptAdminAuth(): void {
     if (token.value) {
       emit('admin:auth', { token: token.value });
+      if (selectedSession.value) {
+        emit('admin:subscribe', { sessionId: selectedSession.value });
+      }
+      refreshSessions();
     }
-  });
+  }
+
+  socket.on('connect', attemptAdminAuth);
+  socket.io.on('reconnect', attemptAdminAuth);
+
+  function handleAdminOnline(): void {
+    if (token.value) {
+      if (!socket.connected) {
+        connect();
+      } else {
+        attemptAdminAuth();
+      }
+    }
+  }
+
+  if (typeof window !== 'undefined') {
+    window.addEventListener('online', handleAdminOnline);
+  }
 
   // Cleanup
   onScopeDispose(() => {
+    if (typeof window !== 'undefined') {
+      window.removeEventListener('online', handleAdminOnline);
+    }
     stopAutoRefresh();
     off('admin:authenticated', onAuthenticated);
     off('admin:auth-error', onAuthError);

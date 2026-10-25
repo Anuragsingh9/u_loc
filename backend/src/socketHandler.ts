@@ -56,6 +56,16 @@ export function setupSocketHandlers(
           return;
         }
 
+        // Cleanly disconnect any lingering old socket if reconnecting with a new socket ID
+        const existingSession = sessionManager.validatePairingCode(pairingCode);
+        if (existingSession && existingSession.sharerSocketId && existingSession.sharerSocketId !== socket.id) {
+          const oldSocket = io.sockets.sockets.get(existingSession.sharerSocketId);
+          if (oldSocket) {
+            oldSocket.leave(`session:${existingSession.sessionId}`);
+            oldSocket.disconnect(true);
+          }
+        }
+
         // Join the session
         const session = sessionManager.joinSession(pairingCode, socket.id);
         if (!session) {

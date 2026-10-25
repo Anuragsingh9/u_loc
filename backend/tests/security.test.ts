@@ -113,8 +113,8 @@ describe('Security', () => {
     });
   });
 
-  describe('Pairing code replay prevention', () => {
-    it('should not allow a pairing code to be used after join', async () => {
+  describe('Pairing code lifecycle', () => {
+    it('should invalidate pairing code once session is deleted by admin', async () => {
       const token = await getAdminToken();
 
       // Create session
@@ -123,6 +123,7 @@ describe('Security', () => {
         .set('Authorization', `Bearer ${token}`)
         .send({});
       const pairingCode = createRes.body.pairingCode;
+      const sessionId = createRes.body.sessionId;
 
       // Validate — should be valid
       const validateRes1 = await request(ctx.app)
@@ -134,7 +135,13 @@ describe('Security', () => {
       const session = ctx.sessionManager.joinSession(pairingCode, 'test-socket-id');
       expect(session).not.toBeNull();
 
-      // Try to validate again — should be invalid (code consumed)
+      // Delete session as admin
+      const deleteRes = await request(ctx.app)
+        .delete(`/api/admin/sessions/${sessionId}`)
+        .set('Authorization', `Bearer ${token}`);
+      expect(deleteRes.status).toBe(200);
+
+      // Try to validate again — should be invalid (session deleted)
       const validateRes2 = await request(ctx.app)
         .post('/api/share/validate')
         .send({ pairingCode });

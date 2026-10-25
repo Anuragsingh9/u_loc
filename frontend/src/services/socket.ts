@@ -8,8 +8,10 @@ export function createSocket(url?: string): Socket {
   const socket = io(url ?? '/', {
     autoConnect: false,
     reconnection: true,
-    reconnectionAttempts: 10,
+    reconnectionAttempts: Infinity,
     reconnectionDelay: 1000,
+    reconnectionDelayMax: 5000,
+    randomizationFactor: 0.5,
     transports: ['websocket', 'polling'],
   });
 
