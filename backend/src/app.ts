@@ -59,11 +59,15 @@ export function createApp(configOverrides: Partial<Config> = {}): AppContext {
             'blob:',
             'https://*.tile.openstreetmap.org',
             'https://*.openstreetmap.org',
+            'https://*.basemaps.cartocdn.com',
           ],
           connectSrc: ["'self'", 'ws:', 'wss:', 'http:', 'https:'],
         },
       },
       crossOriginEmbedderPolicy: false,
+      referrerPolicy: {
+        policy: 'strict-origin-when-cross-origin',
+      },
     })
   );
   app.use(
