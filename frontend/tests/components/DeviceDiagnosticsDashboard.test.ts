@@ -49,27 +49,9 @@ describe('DeviceDiagnosticsDashboard.vue', () => {
     // Check Device Specifications
     expect(wrapper.text()).toContain('Device Specifications');
 
-    // Check Location Service card and Stop Sharing button
+    // Check Location Service card and embedded mini-map at bottom
     expect(wrapper.text()).toContain('Real-Time Location Service');
-    const stopButton = wrapper.find('.stop-btn');
-    expect(stopButton.exists()).toBe(true);
-    expect(stopButton.text()).toContain('Stop Sharing');
-  });
-
-  it('emits stop event when Stop Sharing button is clicked', async () => {
-    const wrapper = mount(DeviceDiagnosticsDashboard, {
-      props: defaultProps,
-      global: {
-        stubs: {
-          LocationMap: true,
-          StatusIndicator: true,
-        },
-      },
-    });
-
-    const stopButton = wrapper.find('.stop-btn');
-    await stopButton.trigger('click');
-
-    expect(wrapper.emitted('stop')).toHaveLength(1);
+    const mapWrapper = wrapper.find('.map-embed-wrapper');
+    expect(mapWrapper.exists()).toBe(true);
   });
 });

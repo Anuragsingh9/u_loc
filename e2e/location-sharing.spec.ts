@@ -57,12 +57,13 @@ test.describe('Real-Time Location Sharing Application', () => {
     await expect(adminPage).toHaveURL(/.*\/admin\/dashboard/);
 
     // Create a new session
+    const sessionName = `E2E Fleet Vehicle ${Date.now()}`;
     await adminPage.click('button:has-text("+ New Session")');
-    await adminPage.fill('#session-label', 'E2E Fleet Vehicle');
+    await adminPage.fill('#session-label', sessionName);
     await adminPage.click('button:has-text("Create Session")');
 
     // Verify session card created
-    const sessionCard = adminPage.locator('.session-card', { hasText: 'E2E Fleet Vehicle' });
+    const sessionCard = adminPage.locator('.session-card', { hasText: sessionName }).first();
     await expect(sessionCard).toBeVisible();
 
     // Get pairing code
@@ -86,9 +87,8 @@ test.describe('Real-Time Location Sharing Application', () => {
     await sharerPage.fill('.code-input', pairingCode);
     await sharerPage.click('button:has-text("Connect")');
 
-    // Sharer enters sharing state
-    const stopBtn = sharerPage.locator('button:has-text("Stop Sharing")');
-    await expect(stopBtn).toBeVisible({ timeout: 10000 });
+    // Sharer enters diagnostics dashboard state with embedded mini-map
+    await expect(sharerPage.locator('.diagnostics-dashboard')).toBeVisible({ timeout: 10000 });
     await expect(sharerPage.locator('.map-container')).toBeVisible();
 
     // In Admin dashboard, verify status changes to connected/sharing
@@ -97,14 +97,6 @@ test.describe('Real-Time Location Sharing Application', () => {
     // Expand session map in admin view
     await sessionCard.locator('.session-card-top').click();
     await expect(sessionCard.locator('.map-container')).toBeVisible();
-
-    // Sharer stops sharing (session remains active in admin dashboard)
-    await stopBtn.click();
-    await expect(sharerPage.locator('.share-state--stopped')).toBeVisible();
-    await expect(sharerPage.locator('.share-hero-title')).toContainText('Sharing Stopped');
-
-    // Verify session remains active in admin dashboard unless admin deletes it
-    await expect(sessionCard).toBeVisible();
 
     // Admin explicitly deletes / cancels the session
     adminPage.once('dialog', (dialog) => dialog.accept());

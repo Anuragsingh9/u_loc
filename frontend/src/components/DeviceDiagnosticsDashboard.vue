@@ -91,62 +91,7 @@ const {
     </div>
 
     <div class="dashboard-grid">
-      <!-- 1. Transparent Location Sharing Service Card -->
-      <section class="diag-card location-service-card" aria-labelledby="loc-service-title">
-        <div class="card-header">
-          <div class="card-title-group">
-            <span class="card-icon" aria-hidden="true">📍</span>
-            <div>
-              <h2 id="loc-service-title" class="card-title">Real-Time Location Service</h2>
-              <p class="card-subtitle">Active secure location transmission</p>
-            </div>
-          </div>
-          <div class="header-status-badges">
-            <StatusIndicator
-              :status="connectionStatus === 'connected' ? 'connected' : 'waiting'"
-              :label="connectionStatus === 'connected' ? 'Connected' : 'Reconnecting…'"
-            />
-            <StatusIndicator v-if="isWatching" status="active" label="GPS Active" />
-          </div>
-        </div>
-
-        <div class="location-meta-bar">
-          <span v-if="accuracyText" class="meta-badge">
-            📡 Accuracy: {{ accuracyText }}
-          </span>
-          <span v-if="lastUpdateText" class="meta-badge">
-            🕐 Updated: {{ lastUpdateText }}
-          </span>
-          <span class="meta-badge meta-badge--active">
-            🟢 Real-Time
-          </span>
-        </div>
-
-        <div class="map-embed-wrapper">
-          <LocationMap
-            :lat="currentPosition?.lat"
-            :lng="currentPosition?.lng"
-            :accuracy="currentPosition?.accuracy"
-            :interactive="true"
-          />
-        </div>
-
-        <div v-if="geoError" class="geo-error-alert" role="alert">
-          ⚠️ {{ geoError.message }}
-        </div>
-
-        <!-- <div class="card-footer">
-          <button
-            class="btn btn-danger btn-block stop-btn"
-            @click="emit('stop')"
-            aria-label="Stop sharing your location"
-          >
-            🛑 Stop Sharing
-          </button>
-        </div> -->
-      </section>
-
-      <!-- 2. RAM Performance Card -->
+      <!-- 1. RAM Performance Card -->
       <section class="diag-card" aria-labelledby="ram-title">
         <div class="card-header">
           <div class="card-title-group">
@@ -197,7 +142,7 @@ const {
         </p>
       </section>
 
-      <!-- 3. Storage Analysis Card -->
+      <!-- 2. Storage Analysis Card -->
       <section class="diag-card" aria-labelledby="storage-title">
         <div class="card-header">
           <div class="card-title-group">
@@ -242,7 +187,7 @@ const {
         </p>
       </section>
 
-      <!-- 4. Battery Information Card -->
+      <!-- 3. Battery Information Card -->
       <section class="diag-card" aria-labelledby="battery-title">
         <div class="card-header">
           <div class="card-title-group">
@@ -297,7 +242,7 @@ const {
         </div>
       </section>
 
-      <!-- 5. Device Specifications Card -->
+      <!-- 4. Device Specifications Card -->
       <section class="diag-card" aria-labelledby="specs-title">
         <div class="card-header">
           <div class="card-title-group">
@@ -334,6 +279,51 @@ const {
             <span class="spec-label">Display Mode</span>
             <span class="spec-value">Mobile Viewport</span>
           </div>
+        </div>
+      </section>
+
+      <!-- 5. Bottom Most: Location Service & Mini Map -->
+      <section class="diag-card location-service-card" aria-labelledby="loc-service-title">
+        <div class="card-header">
+          <div class="card-title-group">
+            <span class="card-icon" aria-hidden="true">📍</span>
+            <div>
+              <h2 id="loc-service-title" class="card-title">Real-Time Location Service</h2>
+              <p class="card-subtitle">Active secure location transmission</p>
+            </div>
+          </div>
+          <div class="header-status-badges">
+            <StatusIndicator
+              :status="connectionStatus === 'connected' ? 'connected' : 'waiting'"
+              :label="connectionStatus === 'connected' ? 'Connected' : 'Reconnecting…'"
+            />
+            <StatusIndicator v-if="isWatching" status="active" label="GPS Active" />
+          </div>
+        </div>
+
+        <div class="location-meta-bar">
+          <span v-if="accuracyText" class="meta-badge">
+            📡 Accuracy: {{ accuracyText }}
+          </span>
+          <span v-if="lastUpdateText" class="meta-badge">
+            🕐 Updated: {{ lastUpdateText }}
+          </span>
+          <span class="meta-badge meta-badge--active">
+            🟢 Real-Time
+          </span>
+        </div>
+
+        <div class="map-embed-wrapper">
+          <LocationMap
+            :lat="currentPosition?.lat"
+            :lng="currentPosition?.lng"
+            :accuracy="currentPosition?.accuracy"
+            :interactive="true"
+          />
+        </div>
+
+        <div v-if="geoError" class="geo-error-alert" role="alert">
+          ⚠️ {{ geoError.message }}
         </div>
       </section>
     </div>
@@ -668,7 +658,7 @@ const {
 
 /* Location Service Embedded Card */
 .location-service-card {
-  border: 2px solid #3b82f6;
+  border: 1px solid var(--color-border);
   position: relative;
   overflow: hidden;
 }
@@ -706,11 +696,20 @@ const {
 }
 
 .map-embed-wrapper {
-  height: 280px;
+  height: 94px;
   border-radius: var(--radius-md);
   overflow: hidden;
   border: 1px solid var(--color-border);
   margin-bottom: var(--space-3);
+}
+
+.map-embed-wrapper:last-child {
+  margin-bottom: 0;
+}
+
+.map-embed-wrapper :deep(.leaflet-control-zoom) {
+  transform: scale(0.75);
+  transform-origin: top left;
 }
 
 .geo-error-alert {
