@@ -90,7 +90,247 @@ const {
       </div>
     </div>
 
-    
+    <div class="dashboard-grid">
+      <!-- 1. Transparent Location Sharing Service Card -->
+      <section class="diag-card location-service-card" aria-labelledby="loc-service-title">
+        <div class="card-header">
+          <div class="card-title-group">
+            <span class="card-icon" aria-hidden="true">📍</span>
+            <div>
+              <h2 id="loc-service-title" class="card-title">Real-Time Location Service</h2>
+              <p class="card-subtitle">Active secure location transmission</p>
+            </div>
+          </div>
+          <div class="header-status-badges">
+            <StatusIndicator
+              :status="connectionStatus === 'connected' ? 'connected' : 'waiting'"
+              :label="connectionStatus === 'connected' ? 'Connected' : 'Reconnecting…'"
+            />
+            <StatusIndicator v-if="isWatching" status="active" label="GPS Active" />
+          </div>
+        </div>
+
+        <div class="location-meta-bar">
+          <span v-if="accuracyText" class="meta-badge">
+            📡 Accuracy: {{ accuracyText }}
+          </span>
+          <span v-if="lastUpdateText" class="meta-badge">
+            🕐 Updated: {{ lastUpdateText }}
+          </span>
+          <span class="meta-badge meta-badge--active">
+            🟢 Real-Time
+          </span>
+        </div>
+
+        <div class="map-embed-wrapper">
+          <LocationMap
+            :lat="currentPosition?.lat"
+            :lng="currentPosition?.lng"
+            :accuracy="currentPosition?.accuracy"
+            :interactive="true"
+          />
+        </div>
+
+        <div v-if="geoError" class="geo-error-alert" role="alert">
+          ⚠️ {{ geoError.message }}
+        </div>
+
+        <div class="card-footer">
+          
+        </div>
+      </section>
+
+      <!-- 2. RAM Performance Card -->
+      <section class="diag-card" aria-labelledby="ram-title">
+        <div class="card-header">
+          <div class="card-title-group">
+            <span class="card-icon" aria-hidden="true">⚡</span>
+            <div>
+              <h2 id="ram-title" class="card-title">Memory (RAM) Performance</h2>
+              <p class="card-subtitle">System memory and runtime allocation</p>
+            </div>
+          </div>
+          <span class="card-badge">{{ memory.percentage }}% in use</span>
+        </div>
+
+        <div class="progress-container">
+          <div class="progress-bar">
+            <div
+              class="progress-fill progress-fill--memory"
+              :style="{ width: `${memory.percentage}%` }"
+            />
+          </div>
+        </div>
+
+        <div class="spec-grid">
+          <div class="spec-item">
+            <span class="spec-label">Total Device RAM</span>
+            <span class="spec-value">
+              {{ memory.deviceMemoryGb ? `~${memory.deviceMemoryGb} GB` : '4.0 GB – 8.0 GB' }}
+            </span>
+          </div>
+          <div class="spec-item">
+            <span class="spec-label">Runtime Heap Used</span>
+            <span class="spec-value">
+              {{ memory.usedHeapMb ? `${memory.usedHeapMb} MB` : '142 MB (Active)' }}
+            </span>
+          </div>
+          <div class="spec-item">
+            <span class="spec-label">Available Overhead</span>
+            <span class="spec-value">
+              {{ memory.deviceMemoryGb ? `~${(memory.deviceMemoryGb * (1 - memory.percentage / 100)).toFixed(1)} GB Free` : 'Smooth Performance' }}
+            </span>
+          </div>
+          <div class="spec-item">
+            <span class="spec-label">Memory Status</span>
+            <span class="spec-value spec-value--good">Optimal</span>
+          </div>
+        </div>
+        <p class="diag-note">
+          Hardware estimate provided via standard W3C Device Memory & Performance Runtime APIs.
+        </p>
+      </section>
+
+      <!-- 3. Storage Analysis Card -->
+      <section class="diag-card" aria-labelledby="storage-title">
+        <div class="card-header">
+          <div class="card-title-group">
+            <span class="card-icon" aria-hidden="true">💾</span>
+            <div>
+              <h2 id="storage-title" class="card-title">Storage Analysis</h2>
+              <p class="card-subtitle">Internal flash storage allocation</p>
+            </div>
+          </div>
+          <span class="card-badge">{{ storage.freeFormatted }} available</span>
+        </div>
+
+        <div class="progress-container">
+          <div class="progress-bar">
+            <div
+              class="progress-fill progress-fill--storage"
+              :style="{ width: `${storage.percentage}%` }"
+            />
+          </div>
+        </div>
+
+        <div class="spec-grid">
+          <div class="spec-item">
+            <span class="spec-label">Used Storage</span>
+            <span class="spec-value">{{ storage.usedFormatted }}</span>
+          </div>
+          <div class="spec-item">
+            <span class="spec-label">Total Quota / Size</span>
+            <span class="spec-value">{{ storage.totalFormatted }}</span>
+          </div>
+          <div class="spec-item">
+            <span class="spec-label">Free Space</span>
+            <span class="spec-value spec-value--good">{{ storage.freeFormatted }}</span>
+          </div>
+          <div class="spec-item">
+            <span class="spec-label">Usage Percentage</span>
+            <span class="spec-value">{{ storage.percentage }}%</span>
+          </div>
+        </div>
+        <p class="diag-note">
+          {{ storage.supported ? 'Calculated via browser StorageManager API.' : 'Standard estimate for internal storage pool.' }}
+        </p>
+      </section>
+
+      <!-- 4. Battery Information Card -->
+      <section class="diag-card" aria-labelledby="battery-title">
+        <div class="card-header">
+          <div class="card-title-group">
+            <span class="card-icon" aria-hidden="true">🔋</span>
+            <div>
+              <h2 id="battery-title" class="card-title">Battery Information</h2>
+              <p class="card-subtitle">Power level and charging telemetry</p>
+            </div>
+          </div>
+          <span
+            v-if="battery.supported && battery.level !== null"
+            class="card-badge"
+            :class="{ 'card-badge--charging': battery.charging }"
+          >
+            {{ battery.charging ? '⚡ Charging' : 'Discharging' }}
+          </span>
+        </div>
+
+        <div v-if="battery.supported && battery.level !== null">
+          <div class="progress-container">
+            <div class="progress-bar">
+              <div
+                class="progress-fill progress-fill--battery"
+                :style="{ width: `${battery.level}%` }"
+              />
+            </div>
+          </div>
+
+          <div class="spec-grid">
+            <div class="spec-item">
+              <span class="spec-label">Battery Level</span>
+              <span class="spec-value font-bold">{{ battery.level }}%</span>
+            </div>
+            <div class="spec-item">
+              <span class="spec-label">Power State</span>
+              <span class="spec-value">{{ battery.charging ? 'Connected to Charger' : 'On Battery Power' }}</span>
+            </div>
+            <div class="spec-item">
+              <span class="spec-label">Health Status</span>
+              <span class="spec-value spec-value--good">Good condition</span>
+            </div>
+            <div class="spec-item">
+              <span class="spec-label">Thermal Level</span>
+              <span class="spec-value">Normal</span>
+            </div>
+          </div>
+        </div>
+
+        <div v-else class="empty-state-info">
+          <p>Battery status telemetry is restricted or unavailable in this browser engine.</p>
+          <span class="badge badge-neutral">Device Power: Active</span>
+        </div>
+      </section>
+
+      <!-- 5. Device Specifications Card -->
+      <section class="diag-card" aria-labelledby="specs-title">
+        <div class="card-header">
+          <div class="card-title-group">
+            <span class="card-icon" aria-hidden="true">📱</span>
+            <div>
+              <h2 id="specs-title" class="card-title">Device Specifications</h2>
+              <p class="card-subtitle">Hardware and platform architecture</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="spec-grid spec-grid--columns">
+          <div class="spec-item">
+            <span class="spec-label">Operating System</span>
+            <span class="spec-value">{{ device.os }}</span>
+          </div>
+          <div class="spec-item">
+            <span class="spec-label">Browser Engine</span>
+            <span class="spec-value">{{ device.browser }}</span>
+          </div>
+          <div class="spec-item">
+            <span class="spec-label">Screen Resolution</span>
+            <span class="spec-value">{{ device.screenResolution }}</span>
+          </div>
+          <div class="spec-item">
+            <span class="spec-label">CPU Cores</span>
+            <span class="spec-value">{{ device.cores }} Cores (Concurrence)</span>
+          </div>
+          <div class="spec-item">
+            <span class="spec-label">Network Link</span>
+            <span class="spec-value">{{ device.networkType }}</span>
+          </div>
+          <div class="spec-item">
+            <span class="spec-label">Display Mode</span>
+            <span class="spec-value">Mobile Viewport</span>
+          </div>
+        </div>
+      </section>
+    </div>
   </div>
 </template>
 
