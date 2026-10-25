@@ -135,7 +135,7 @@ const {
           ⚠️ {{ geoError.message }}
         </div>
 
-        <div class="card-footer">
+        <!-- <div class="card-footer">
           <button
             class="btn btn-danger btn-block stop-btn"
             @click="emit('stop')"
@@ -143,7 +143,7 @@ const {
           >
             🛑 Stop Sharing
           </button>
-        </div>
+        </div> -->
       </section>
 
       <!-- 2. RAM Performance Card -->
