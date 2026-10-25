@@ -136,7 +136,13 @@ const {
         </div>
 
         <div class="card-footer">
-          
+          <button
+            class="btn btn-danger btn-block stop-btn"
+            @click="emit('stop')"
+            aria-label="Stop sharing your location"
+          >
+            🛑 Stop Sharing
+          </button>
         </div>
       </section>
 
