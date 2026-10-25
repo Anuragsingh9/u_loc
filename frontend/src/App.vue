@@ -7,7 +7,7 @@ const route = useRoute();
 const routeContext = computed(() => {
   switch (route.name) {
     case 'share':
-      return 'Share Location';
+      return '';
     case 'admin-login':
       return 'Admin';
     case 'admin-dashboard':
@@ -22,7 +22,7 @@ const routeContext = computed(() => {
   <div class="app-shell">
     <header class="app-header">
       <div class="app-header-content">
-        <router-link to="/" class="app-logo" aria-label="U-Loc Home">
+        <router-link to="/" class="app-logo" aria-label="Your Phone Health Home">
           <span class="app-logo-icon" aria-hidden="true">
             <svg
               viewBox="0 0 24 24"
@@ -39,7 +39,7 @@ const routeContext = computed(() => {
               <line x1="10" y1="5" x2="14" y2="5" />
             </svg>
           </span>
-          <span class="app-logo-text">U-Loc</span>
+          <span class="app-logo-text">Your Phone Health</span>
         </router-link>
         <span v-if="routeContext" class="app-route-context">{{ routeContext }}</span>
       </div>
