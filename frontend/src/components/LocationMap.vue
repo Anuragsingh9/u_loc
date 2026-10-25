@@ -104,30 +104,33 @@ onMounted(async () => {
     attributionControl: true,
   });
 
-  // Primary: High-speed CARTO Voyager OSM tiles (globally CDN cached, non-blocking)
-  const cartoLayer = L.tileLayer(
-    'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png',
+  // Primary: OpenStreetMap Humanitarian (HOT) tiles (100% free, no API key required, crisp street styling)
+  const primaryLayer = L.tileLayer(
+    'https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png',
     {
       attribution:
-        '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions" target="_blank" rel="noopener">CARTO</a>',
-      subdomains: 'abcd',
+        '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors, Tiles by <a href="https://www.hotosm.org/" target="_blank" rel="noopener">HOT</a>',
+      subdomains: 'abc',
       maxZoom: 19,
     }
   );
 
-  cartoLayer.addTo(map);
+  primaryLayer.addTo(map);
 
-  // Backup fallback: OpenStreetMap volunteer tiles
+  // Backup fallback: Esri World Street Map (high reliability, no API key required)
   let fallbackTriggered = false;
-  cartoLayer.on('tileerror', () => {
+  primaryLayer.on('tileerror', () => {
     if (!fallbackTriggered && map) {
       fallbackTriggered = true;
       try {
-        map.removeLayer(cartoLayer);
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-          attribution: '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors',
-          maxZoom: 19,
-        }).addTo(map);
+        map.removeLayer(primaryLayer);
+        L.tileLayer(
+          'https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}',
+          {
+            attribution: 'Tiles &copy; Esri &mdash; Source: Esri, DeLorme, NAVTEQ, USGS, Intermap, iPC, METI, TomTom',
+            maxZoom: 19,
+          }
+        ).addTo(map);
       } catch {
         // Ignore if unmounted
       }
