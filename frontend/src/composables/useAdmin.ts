@@ -55,9 +55,14 @@ export function useAdmin() {
       token.value = stored;
       isAuthenticated.value = true;
       connect();
-      socket.once('connect', () => {
+      const sendAuth = () => {
         emit('admin:auth', { token: stored });
-      });
+      };
+      if (isConnected.value || socket.connected) {
+        sendAuth();
+      } else {
+        socket.once('connect', sendAuth);
+      }
       return true;
     }
     return false;

@@ -247,6 +247,19 @@ export function setupSocketHandlers(
 
         // Join the Socket.IO room to receive broadcasts
         socket.join(`session:${data.sessionId}`);
+
+        // Immediately emit latest location if available
+        const session = sessionManager.getSession(data.sessionId);
+        if (session && session.lastLocation) {
+          socket.emit('location:update', {
+            sessionId: data.sessionId,
+            lat: session.lastLocation.lat,
+            lng: session.lastLocation.lng,
+            accuracy: session.lastLocation.accuracy,
+            timestamp: session.lastLocation.timestamp,
+            isStale: session.lastLocation.isStale,
+          });
+        }
       } catch (err) {
         console.error('[Socket] Error in admin:subscribe handler');
       }

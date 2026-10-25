@@ -132,7 +132,36 @@ export function useSharing() {
     window.addEventListener('online', handleOnline);
   }
 
-  // Watch geolocation position and emit location updates
+  // Continuous location update heartbeat while sharing (every 5 seconds)
+  let heartbeatTimer: ReturnType<typeof setInterval> | null = null;
+
+  watch(
+    status,
+    (newStatus) => {
+      if (newStatus === 'sharing') {
+        if (!heartbeatTimer) {
+          heartbeatTimer = setInterval(() => {
+            if (currentPosition.value && status.value === 'sharing' && isConnected.value) {
+              emit('sharer:location', {
+                lat: currentPosition.value.lat,
+                lng: currentPosition.value.lng,
+                accuracy: currentPosition.value.accuracy,
+                timestamp: Date.now(),
+              });
+            }
+          }, 5000);
+        }
+      } else {
+        if (heartbeatTimer) {
+          clearInterval(heartbeatTimer);
+          heartbeatTimer = null;
+        }
+      }
+    },
+    { immediate: true }
+  );
+
+  // Watch geolocation position and emit location updates immediately on change
   watch(currentPosition, (pos) => {
     if (pos && status.value === 'sharing' && isConnected.value) {
       emit('sharer:location', {
@@ -153,6 +182,10 @@ export function useSharing() {
 
   // Cleanup
   onScopeDispose(() => {
+    if (heartbeatTimer) {
+      clearInterval(heartbeatTimer);
+      heartbeatTimer = null;
+    }
     if (typeof window !== 'undefined') {
       window.removeEventListener('online', handleOnline);
     }

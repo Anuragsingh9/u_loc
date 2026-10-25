@@ -60,6 +60,9 @@ function updatePosition(): void {
   const accColor = getAccuracyColor();
 
   if (marker) {
+    if (!map.hasLayer(marker)) {
+      marker.addTo(map);
+    }
     marker.setLatLng(latlng);
     marker.setStyle({ color, fillColor: color });
   } else {
@@ -73,6 +76,9 @@ function updatePosition(): void {
   }
 
   if (accuracyCircle) {
+    if (!map.hasLayer(accuracyCircle)) {
+      accuracyCircle.addTo(map);
+    }
     accuracyCircle.setLatLng(latlng);
     accuracyCircle.setRadius(accuracy);
     accuracyCircle.setStyle({ color, fillColor: accColor });
